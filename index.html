@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8" />
+<title>Veckans väder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(180deg, #1976D2, #42A5F5);
+        color: white;
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 4rem;
+        margin-top: 20px;
+        font-weight: 300;
+    }
+
+    /* Tvingad lodrät layout */
+    .container {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 30px;
+        width: 100%;
+        padding-bottom: 50px;
+        margin-top: 40px;
+    }
+
+    .day {
+        background: rgba(255,255,255,0.18);
+        backdrop-filter: blur(7px);
+        border-radius: 16px;
+        padding: 30px;
+        width: 80%;
+        max-width: 700px;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+
+    .date {
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .icon {
+        font-size: 6rem;
+        margin: 10px 0;
+    }
+
+    .temp {
+        font-size: 2.2rem;
+        margin-top: 10px;
+        font-weight: 300;
+    }
+</style>
+</head>
+
+<body>
+<h1>Veckans väder</h1>
+<div class="container" id="weather"></div>
+
+<script>
+const lat = 59.3293;
+const lon = 18.0686;
+
+const icons = {
+    0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
+    45:"🌫️",48:"🌫️",
+    51:"🌦️",53:"🌦️",55:"🌧️",
+    61:"🌧️",63:"🌧️",65:"🌧️",
+    71:"🌨️",73:"🌨️",75:"❄️",
+    80:"🌦️",81:"🌧️",82:"⛈️",
+    95:"⛈️",96:"⛈️",99:"⛈️"
+};
+
+fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto`)
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("weather");
+
+    data.daily.time.forEach((date, i) => {
+      const max = Math.round(data.daily.temperature_2m_max[i]);
+      const min = Math.round(data.daily.temperature_2m_min[i]);
+      const code = data.daily.weathercode[i];
+
+      const elem = document.createElement("div");
+      elem.className = "day";
+
+      elem.innerHTML = `
+        <div class="date">${new Date(date).toLocaleDateString("sv-SE", { weekday: "long" }).toUpperCase()}</div>
+        <div class="icon">${icons[code] ?? "❓"}</div>
+        <div class="temp">Max ${max}°C • Min ${min}°C</div>
+      `;
+
+      container.appendChild(elem);
+    });
+  });
+</script>
+
+</body>
+</html>
