@@ -2,7 +2,7 @@ name: Update Weather JSON (Hourly)
 
 on:
   schedule:
-    - cron: "0 * * * *"    # varje hel timme
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,20 +18,50 @@ jobs:
       with:
         node-version: "18"
 
-    - name: Fetch weather data
+    - name: Fetch weather data with retry
       run: |
         echo "Hämtar väderdatan..."
-        curl -s "https://api.open-meteo.com/v1/forecast?latitude=59.3293&longitude=18.0686&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto" \
-        -o rawweather.json
+        for i in {1..5}; do
+          curl -A "Mozilla/5.0" -s --fail \
+            "https://api.open-meteo.com/v1/forecast?latitude=59.3293&longitude=18.0686&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto" \
+            -o rawweather.json && break
+          echo "Misslyckades, försöker igen om 5 sek... (försök $i)"
+          sleep 5
+        done
 
-    - name: Validate raw data
-      run: |
         if [ ! -s rawweather.json ]; then
-          echo "FEL: rawweather.json är tom eller saknas!"
+          echo "FEL: Kunde inte hämta väderdata efter 5 försök."
           exit 1
         fi
 
-    - name: Build weather.json (emoji läggs på i HTML, inte här)
+    - name: Build weather.json
       run: |
         node << 'EOF'
         const fs = require("fs");
+        const data = JSON.parse(fs.readFileSync("rawweather.json"));
+
+        const result = data.daily.time.map((date, i) => ({
+          day: new Date(date).toLocaleDateString("sv-SE", { weekday: "long" }).toUpperCase(),
+          max: Math.round(data.daily.temperature_2m_max[i]),
+          min: Math.round(data.daily.temperature_2m_min[i]),
+          code: data.daily.weathercode[i]
+        }));
+
+        fs.writeFileSync("weather.json", JSON.stringify(result, null, 2));
+        console.log("weather.json skapad!");
+        EOF
+
+    - name: Commit and push safely
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name  "GitHub Actions"
+
+        git add weather.json
+
+        if git diff --cached --quiet; then
+          echo "Inga ändringar att committa."
+          exit 0
+        fi
+
+        git commit -m "Updated weather.json"
+        git push || echo "Push misslyckades, försöker senare."
