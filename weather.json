@@ -1,0 +1,60 @@
+name: Update Weather JSON
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # Varje hel timme
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v3
+
+    - name: Fetch weather from Open-Meteo
+      run: |
+        curl "https://api.open-meteo.com/v1/forecast?latitude=59.3293&longitude=18.0686&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto" \
+        -o rawweather.json
+
+    - name: Convert to simple JSON
+      run: |
+        node << 'EOF'
+        const fs = require("fs");
+        const data = JSON.parse(fs.readFileSync("rawweather.json"));
+
+        const icons = {
+          0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
+          45:"🌫️",48:"🌫️",
+          51:"🌦️",53:"🌦️",55:"🌧️",
+          61:"🌧️",63:"🌧️",65:"🌧️",
+          71:"🌨️",73:"🌨️",75:"❄️",
+          80:"🌦️",81:"🌧️",82:"⛈️",
+          95:"⛈️",96:"⛈️",99:"⛈️"
+        };
+
+        const result = [];
+
+        for (let i = 0; i < data.daily.time.length; i++) {
+          let d = new Date(data.daily.time[i]);
+          let weekday = d.toLocaleDateString("sv-SE", { weekday: "long" }).toUpperCase();
+
+          result.push({
+            day: weekday,
+            max: Math.round(data.daily.temperature_2m_max[i]),
+            min: Math.round(data.daily.temperature_2m_min[i]),
+            icon: icons[data.daily.weathercode[i]] || "❓"
+          });
+        }
+
+        fs.writeFileSync("weather.json", JSON.stringify(result, null, 2));
+        EOF
+
+    - name: Commit updated weather.json
+      run: |
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        git add weather.json
+        git commit -m "Updated weather data" || echo "No changes"
+        git push
