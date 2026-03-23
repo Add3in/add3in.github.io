@@ -20,37 +20,4 @@ jobs:
 
     - name: Fetch weather data
       run: |
-        curl -s "https://api.open-meteo.com/v1/forecast?latitude=59.3293&longitude=18.0686&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto" \
-        -o rawweather.json
-
-    - name: Validate raw file
-      run: |
-        if [ ! -s rawweather.json ]; then
-          echo "FEL: rawweather.json är tom!"
-          exit 1
-        fi
-
-    - name: Build weather.json (emoji added in HTML, not here)
-      run: |
-        node << 'EOF'
-        const fs = require("fs");
-        const data = JSON.parse(fs.readFileSync("rawweather.json"));
-
-        const result = data.daily.time.map((date, i) => ({
-          day: new Date(date).toLocaleDateString("sv-SE", { weekday: "long" }).toUpperCase(),
-          max: Math.round(data.daily.temperature_2m_max[i]),
-          min: Math.round(data.daily.temperature_2m_min[i]),
-          code: data.daily.weathercode[i]
-        }));
-
-        fs.writeFileSync("weather.json", JSON.stringify(result, null, 2));
-        EOF
-
-    - name: Commit and push
-      run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name  "GitHub Actions"
-
-        git add weather.json
-        git commit -m "Updated weather.json" || exit 0
-        git push
+        echo "Hämtar väderdatan..."
