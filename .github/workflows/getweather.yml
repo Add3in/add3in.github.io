@@ -21,3 +21,17 @@ jobs:
     - name: Fetch weather data
       run: |
         echo "Hämtar väderdatan..."
+        curl -s "https://api.open-meteo.com/v1/forecast?latitude=59.3293&longitude=18.0686&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto" \
+        -o rawweather.json
+
+    - name: Validate raw data
+      run: |
+        if [ ! -s rawweather.json ]; then
+          echo "FEL: rawweather.json är tom eller saknas!"
+          exit 1
+        fi
+
+    - name: Build weather.json (emoji läggs på i HTML, inte här)
+      run: |
+        node << 'EOF'
+        const fs = require("fs");
