@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Veckans väder</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
     body {
@@ -21,10 +21,11 @@
     }
 
     .day {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.25);
         padding: 20px;
         margin-bottom: 15px;
-        border-radius: 12px;
+        border-radius: 15px;
+        text-align: center;
     }
 
     .date {
@@ -38,11 +39,12 @@
     }
 
     .temp {
-        font-size: 28px;
+        font-size: 26px;
         margin-top: 5px;
     }
 </style>
 </head>
+
 <body>
 
 <h1>Veckans väder</h1>
@@ -50,11 +52,25 @@
 <div id="weather"></div>
 
 <script>
-const lat = 59.3293;
-const lon = 18.0686;
+// ---- SmartSign-kompatibel fetch av lokalt JSON ----
+fetch("weather.json")
+  .then(res => res.json())
+  .then(days => {
+      const container = document.getElementById("weather");
+      days.forEach(d => {
+          const div = document.createElement("div");
+          div.className = "day";
 
-// Ikoner
-const icons = {
-    0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
-    45:"🌫️",48:"🌫️",
-    51:"🌦️",53:"🌦️",55:"🌧️",
+          div.innerHTML = `
+              <div class="date">${d.day}</div>
+              <div class="icon">${d.icon}</div>
+              <div class="temp">Max ${d.max}°C • Min ${d.min}°C</div>
+          `;
+          container.appendChild(div);
+      });
+  });
+</script>
+
+</body>
+</html>
+``
