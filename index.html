@@ -1,127 +1,60 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Veckans väder</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-    /* FAST YTA som aldrig ändrar proportioner */
-    #wrapper {
-        width: 1080px;
-        height: 1920px;
-        transform-origin: top left;
-        background: linear-gradient(180deg, #1976D2, #42A5F5);
-        font-family: "Segoe UI", Arial, sans-serif;
+    body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background: #1e90ff;
         color: white;
-        overflow: hidden;
     }
 
     h1 {
         text-align: center;
-        font-size: 90px;
-        margin: 40px 0 20px;
-        font-weight: 300;
-    }
-
-    .days {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 1600px; /* Perfekt fördelat utrymme */
-        padding: 0 60px;
+        font-size: 48px;
+        margin-bottom: 20px;
     }
 
     .day {
-        background: rgba(255,255,255,0.20);
-        backdrop-filter: blur(6px);
-        border-radius: 20px;
-        text-align: center;
-        padding: 25px;
-        height: 210px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+        background: rgba(255,255,255,0.2);
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 12px;
     }
 
     .date {
-        font-size: 48px;
-        font-weight: 600;
+        font-size: 32px;
+        font-weight: bold;
     }
 
     .icon {
-        font-size: 80px;
+        font-size: 60px;
         margin: 10px 0;
     }
 
     .temp {
-        font-size: 40px;
-        font-weight: 300;
+        font-size: 28px;
+        margin-top: 5px;
     }
 </style>
 </head>
-
 <body>
-<div id="wrapper">
-    <h1>Veckans väder</h1>
-    <div class="days" id="weather"></div>
-</div>
+
+<h1>Veckans väder</h1>
+
+<div id="weather"></div>
 
 <script>
-/* ---- SKALA FÖR SMARTSIGN ---- */
-function resize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-
-    const scaleX = w / 1080;
-    const scaleY = h / 1920;
-    const scale = Math.min(scaleX, scaleY);
-
-    document.getElementById("wrapper").style.transform = `scale(${scale})`;
-}
-window.addEventListener("resize", resize);
-window.addEventListener("load", resize);
-
-/* ---- VÄDERKOD ---- */
 const lat = 59.3293;
 const lon = 18.0686;
 
+// Ikoner
 const icons = {
     0:"☀️",1:"🌤️",2:"⛅",3:"☁️",
     45:"🌫️",48:"🌫️",
     51:"🌦️",53:"🌦️",55:"🌧️",
-    61:"🌧️",63:"🌧️",65:"🌧️",
-    71:"🌨️",73:"🌨️",75:"❄️",
-    80:"🌦️",81:"🌧️",82:"⛈️",
-    95:"⛈️",96:"⛈️",99:"⛈️"
-};
-
-fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto`)
-  .then(res => res.json())
-  .then(data => {
-    const container = document.getElementById("weather");
-
-    data.daily.time.forEach((date, i) => {
-      const max = Math.round(data.daily.temperature_2m_max[i]);
-      const min = Math.round(data.daily.temperature_2m_min[i]);
-      const code = data.daily.weathercode[i];
-
-      const elem = document.createElement("div");
-      elem.className = "day";
-
-      elem.innerHTML = `
-        <div class="date">${new Date(date).toLocaleDateString("sv-SE", { weekday: "long" }).toUpperCase()}</div>
-        <div class="icon">${icons[code] ?? "❓"}</div>
-        <div class="temp">Max ${max}°C • Min ${min}°C</div>
-      `;
-
-      container.appendChild(elem);
-    });
-
-    resize();
-  });
-</script>
-
-</body>
-</html>
