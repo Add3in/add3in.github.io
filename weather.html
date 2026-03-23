@@ -61,7 +61,7 @@ const icons = {
   95:"⛈️",96:"⛈️",99:"⛈️"
 };
 
-fetch("weather.json")
+fetch("data/weather.json")
   .then(r => r.json())
   .then(days => {
     const cont = document.getElementById("day-container");
